@@ -19,6 +19,10 @@ struct SessionData {
     login: String,
 }
 
+const PACKAGE_VERSION: &str = env!("CARGO_PKG_VERSION");
+const PACKAGE_NAME: &str = env!("CARGO_PKG_NAME");
+const PACKAGE_AUTHORS: &str = env!("CARGO_PKG_AUTHORS");
+
 fn main() {
     let config_data = Mutex::new(config::read_config());
     println!("Now listening on localhost:8000");
@@ -53,7 +57,7 @@ fn main() {
 fn handle_route(
     request: &Request,
     session_data: &mut Option<SessionData>,
-    config_data: &Mutex<config::Data>,
+    config_data: &Mutex<config::Config>,
 ) -> Response {
     router!(request,
         (POST) (/login) => {
@@ -61,8 +65,11 @@ fn handle_route(
                 login: String,
                 password: String,
             }));
-            println!("Login attempt with login {:?} and password {:?}", data.login, data.password);
-            if data.password.starts_with("b") {
+            let password = config_data.lock().unwrap().web.password.clone();
+            let user = config_data.lock().unwrap().web.user.clone();
+            println!("Login attempt with login {:?}.", data.login);
+
+            if data.password == password && data.login == user {
                 *session_data = Some(SessionData { login: data.login });
                 return Response::redirect_303("/");
             } else {
@@ -71,8 +78,7 @@ fn handle_route(
         },
         (POST) (/logout) => {
             *session_data = None;
-            return Response::html(r#"Logout successful.
-                                     <a href="/">Click here to go to the home</a>"#);
+            return Response::redirect_303("/");
         },
         _ => ()
     );
@@ -81,11 +87,15 @@ fn handle_route(
     } else {
         router!(request,
             (GET) (/) => {
-                let page = renderer::LoginPage {  };
+                let page = renderer::LoginPage {
+                    package_name: PACKAGE_NAME.to_string(),
+                    package_authors: PACKAGE_AUTHORS.to_string(),
+                    package_version: PACKAGE_VERSION.to_string(),
+                };
                 Response::html(page.render().unwrap())
             },
             (GET) (/css) => {
-                Response::text(include_str!("css/style.css"))
+                Response::from_data("text/css", include_str!("css/style.css"))
             },
             _ => Response::redirect_303("/")
         )
@@ -95,21 +105,24 @@ fn handle_route(
 fn handle_route_logged_in(
     request: &Request,
     _session_data: &SessionData,
-    config_data: &Mutex<config::Data>,
+    config_data: &Mutex<config::Config>,
 ) -> Response {
     router!(request,
         (GET) (/) => {
-            Response::html(r#"You are now logged in. If you close your tab and open it again,
-                              you will still be logged in.<br />
-                              <a href="/private">Click here for the private area</a>
-                              <form action="/logout" method="POST">
-                              <button>Logout</button></form>"#)
-        },
-        (GET) (/private) => {
-            let page = renderer::MainPage { test: "world".into() }; // instantiate your struct
-            //println!("{}", );
-            //Response::html(format!("{:?}", config_data.lock().unwrap()))
+            let page = renderer::MainPage {
+                package_name: PACKAGE_NAME.to_string(),
+                package_authors: PACKAGE_AUTHORS.to_string(),
+                package_version: PACKAGE_VERSION.to_string(),
+                config: config_data,
+            };
+
             Response::html(page.render().unwrap())
+        },
+        (GET) (/config) => {
+            Response::html(format!("{:?}", config_data.lock().unwrap()))
+        },
+        (GET) (/css) => {
+            Response::from_data("text/css", include_str!("css/style.css"))
         },
         _ => Response::empty_404()
     )

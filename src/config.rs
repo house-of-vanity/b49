@@ -1,17 +1,26 @@
 use serde_derive::Deserialize;
-use std::fs;
+use std::{fmt, fs};
 use std::process::exit;
 use toml;
+
 #[derive(Deserialize, Debug)]
-pub struct Data {
-    channels: Vec<Channel>,
+pub struct Config {
+    pub plugin: Vec<Plugin>,
+    pub web: WebConfig,
 }
+
 #[derive(Deserialize, Debug)]
-pub struct Channel {
-    name: String,
-    api_key: String,
+pub struct Plugin {
+    pub name: String,
 }
-pub(crate) fn read_config() -> Data {
+
+#[derive(Deserialize, Debug)]
+pub struct WebConfig {
+    pub user: String,
+    pub password: String,
+}
+
+pub(crate) fn read_config() -> Config {
     let filename = "config.toml";
     let contents = match fs::read_to_string(filename) {
         Ok(c) => c,
@@ -20,7 +29,7 @@ pub(crate) fn read_config() -> Data {
             exit(1);
         }
     };
-    let data: Data = match toml::from_str(&contents) {
+    let data: Config = match toml::from_str(&contents) {
         Ok(d) => d,
         Err(_) => {
             eprintln!("Unable to load data from `{}`", filename);

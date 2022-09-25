@@ -1,6 +1,13 @@
-[[channels]]
-name = "ultradesuyo"
+[web]
+user = "1"
+password = "1"
+
+[[plugin]]
+name = "telegram"
 api_key = "key1"
-[[channels]]
-name = "cooking"
+title = "ultradesuyo"
+
+[[plugin]]
+name = "telegram"
 api_key = "key2"
+title = "cooking"
