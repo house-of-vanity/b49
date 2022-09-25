@@ -1,0 +1,6 @@
+[[channels]]
+name = "ultradesuyo"
+api_key = "key1"
+[[channels]]
+name = "cooking"
+api_key = "key2"
