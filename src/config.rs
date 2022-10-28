@@ -12,6 +12,7 @@ pub struct Config {
 #[derive(Deserialize, Debug)]
 pub struct Plugin {
     pub name: String,
+    pub title: String,
 }
 
 #[derive(Deserialize, Debug)]

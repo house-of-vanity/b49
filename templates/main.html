@@ -1,34 +1,31 @@
 {% extends "base.html" %}
 
 {% block content %}
-{% for plugin in config.lock().unwrap().plugin %}
-    {{ plugin.name|e }}
-{% endfor %}
-    <form>
-  <div class="row">
-    <div class="six columns">
-      <label for="exampleEmailInput">Your email</label>
-      <input class="u-full-width" type="email" placeholder="test@mailbox.com" id="exampleEmailInput">
-    </div>
-    <div class="six columns">
-      <label for="exampleRecipientInput">Reason for contacting</label>
-      <select class="u-full-width" id="exampleRecipientInput">
-        <option value="Option 1">Questions</option>
-        <option value="Option 2">Admiration</option>
-        <option value="Option 3">Can I get your number?</option>
-      </select>
-    </div>
-  </div>
-  <label for="exampleMessage">Message</label>
-  <textarea class="u-full-width" placeholder="Hi Dave …" id="exampleMessage"></textarea>
-  <label class="example-send-yourself-copy">
-    <input type="checkbox">
-    <span class="label-body">Send a copy to yourself</span>
-  </label>
-  <input class="button-primary" type="submit" value="Submit">
+<form method="post" >
+    <label for="message"></label>
+    <textarea class="u-full-width" placeholder="Type here..." id="message" name="message"></textarea>
+<!--    <p>Providers:</p>-->
+<!--    {% for plugin in config.lock().unwrap().plugin -%}-->
+<!--    <label>-->
+<!--        <input type="checkbox" name="{{ plugin.name|e }}/{{ plugin.title|e }}">-->
+<!--        <span class="capitalize label-body"><b>{{ plugin.name|e }}</b> - "{{ plugin.title|e }}"</span>-->
+<!--    </label>-->
+<!--    {% endfor -%}-->
+
+
+     <label for="providers">Providers</label>
+<select name="providers" id="providers" multiple style="height: {{ config.lock().unwrap().plugin.len() * 26 }}px">
+    {% for plugin in config.lock().unwrap().plugin -%}
+    <option value="{{ plugin.name|e }}__{{ plugin.title|e }}">{{ plugin.title|e }}</option>
+    {% endfor -%}
+</select>
+
+
+    <input class="button-primary" type="submit" value="Submit">
 </form>
 <form action="/logout" method="POST">
-                              <button>Logout</button></form>
+    <button>Logout</button>
+</form>
 {% endblock -%}
 {% block footer %}
 <p>{{ package_authors }}<br>{{ package_name }} ver:{{ package_version }} <a href="/config">Show config</a></p>

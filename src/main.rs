@@ -2,6 +2,7 @@
 
 mod config;
 mod renderer;
+mod router;
 
 #[macro_use]
 extern crate rouille;
@@ -17,6 +18,11 @@ use askama::Template;
 #[derive(Debug, Clone)]
 struct SessionData {
     login: String,
+}
+#[derive(Debug, Clone)]
+struct PostData {
+    message: String,
+    providers: String,
 }
 
 const PACKAGE_VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -109,11 +115,13 @@ fn handle_route_logged_in(
 ) -> Response {
     router!(request,
         (GET) (/) => {
+            // let result = request.get_param("result");
             let page = renderer::MainPage {
                 package_name: PACKAGE_NAME.to_string(),
                 package_authors: PACKAGE_AUTHORS.to_string(),
                 package_version: PACKAGE_VERSION.to_string(),
                 config: config_data,
+                // result: result,
             };
 
             Response::html(page.render().unwrap())
@@ -123,6 +131,15 @@ fn handle_route_logged_in(
         },
         (GET) (/css) => {
             Response::from_data("text/css", include_str!("css/style.css"))
+        },
+        (POST) (/) => {
+            let data = try_or_400!(post_input!(request, {
+                message: String,
+                providers: Vec<String>,
+            }));
+            println!("{:?}", data);
+
+            return Response::redirect_303("/?result='Done'");
         },
         _ => Response::empty_404()
     )
